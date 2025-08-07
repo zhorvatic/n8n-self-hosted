@@ -1,0 +1,7 @@
+# docker-related
+.env
+data/
+logs/
+
+# IDE noise
+.vscode/

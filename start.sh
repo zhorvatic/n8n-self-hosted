@@ -3,8 +3,12 @@ set -e
 
 # Select environment: dev or prod (default: dev)
 ENVIRONMENT=${1:-dev}
-
 echo "▶️ Starting n8n stack for environment: $ENVIRONMENT"
+
+# Step 0: Pull latest code
+echo "📥 Pulling latest code from main branch..."
+git fetch origin main
+git reset --hard origin/main
 
 # Step 1: Fetch secrets from AWS Parameter Store
 export POSTGRES_DB=$(aws ssm get-parameter --name "/n8n/${ENVIRONMENT}/POSTGRES_DB" --with-decryption --query "Parameter.Value" --output text)

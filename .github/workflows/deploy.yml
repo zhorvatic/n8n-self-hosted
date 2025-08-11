@@ -1,0 +1,43 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write     # Required for OIDC
+  contents: read      # Required to clone the repo
+
+jobs:
+  deploy:
+    name: Deploy to EC2 via SSM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::818682288072:role/n8n-github-deploy
+          aws-region: ca-central-1   # Or your actual AWS region
+
+      - name: Get EC2 Instance ID
+        id: ec2
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=n8n-ec2" "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+          if [ -z "$INSTANCE_ID" ]; then
+            echo "No running EC2 instance found with tag Name=n8n-ec2"
+            exit 1
+          fi
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+
+      - name: Run deployment command on EC2
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids "${{ steps.ec2.outputs.instance_id }}" \
+            --comment "Deploy n8n via GitHub Actions" \
+            --parameters commands="cd /home/ubuntu/n8n && ./start.sh prod" \
+            --output text

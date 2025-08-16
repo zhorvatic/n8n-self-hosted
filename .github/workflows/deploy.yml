@@ -1,0 +1,243 @@
+name: Deploy to EC2 (Artifact)
+
+on:
+  push:
+    branches: [main]
+
+# Principle of least privilege for GHA; AWS perms come from the assumed role
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  # Prevent overlapping deploys to the same env
+  group: deploy-prod-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: ca-central-1
+  APP_ENV: prod
+  APP_URL: https://n8n.zvonkos.com
+  BUCKET: n8n-deploy-artifacts-ca-central-1
+  RELEASE_PREFIX: releases
+  # Optional: KMS key for S3 SSE-KMS (uncomment when you have one)
+  # KMS_KEY_ID: arn:aws:kms:ca-central-1:818682288072:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  # Deployment record recreated after cleanup
+
+defaults:
+  run:
+    shell: bash {0}
+
+jobs:
+  deploy:
+    name: Deploy to prod EC2 via SSM
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: prod
+      url: https://n8n.zvonkos.com
+
+    steps:
+      # SECURITY: Pin actions to a full commit SHA in your repo after first run.
+      # See notes below.
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # helps when deriving version metadata or changelogs later
+          fetch-depth: 0
+
+      - name: Compute version info
+        id: meta
+        run: |
+          set -euo pipefail
+          SHORT_SHA="$(git rev-parse --short=8 HEAD)"
+          MSG="$(git log -1 --pretty=%s | tr -d '\r' | head -c 200)"
+          TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          {
+            echo "short_sha=$SHORT_SHA"
+            echo "ts=$TS"
+          } >> "$GITHUB_OUTPUT"
+
+          cat > VERSION <<EOF
+          Commit: $SHORT_SHA
+          Message: $MSG
+          Deployed: $TS UTC
+          Environment: $APP_ENV
+          EOF
+          echo "Built VERSION:"
+          cat VERSION
+
+      - name: Create release tarball
+        run: |
+          set -euo pipefail  
+          mkdir -p release
+          # include nginx.conf so /version can be served without waking n8n
+          cp docker-compose.yml start.sh VERSION nginx.conf release/
+          TAR="n8n-${{ steps.meta.outputs.short_sha }}.tar.gz"
+          tar -C release -czf "$TAR" .
+          ls -lh "$TAR"
+
+      - name: Configure AWS credentials via OIDC
+        # Recommend upgrading to latest major (v4) and pinning to commit SHA.
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::818682288072:role/n8n-github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+          unset-current-credentials: true
+
+      - name: Upload artifact to S3
+        run: |
+          set -euo pipefail
+          aws s3 cp "n8n-${{ steps.meta.outputs.short_sha }}.tar.gz" \
+            s3://n8n-deploy-artifacts-ca-central-1/releases/
+
+      - name: Get EC2 instance ID (by Name tag)
+        id: ec2
+        run: |
+          set -euo pipefail
+          INSTANCE_ID="$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=n8n-server" "Name=instance-state-name,Values=running" \
+            --query "Reservations[].Instances[].InstanceId" --output text | head -n1)"
+          test -n "$INSTANCE_ID"
+          echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
+          echo "Resolved instance: $INSTANCE_ID"
+
+      - name: Deploy on EC2 via SSM (send + poll + print)
+        id: ssm
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.meta.outputs.short_sha }}"
+          INSTANCE="${{ steps.ec2.outputs.instance_id }}"
+          TAR="n8n-$SHA.tar.gz"
+          BUCKET="${{ env.BUCKET }}"
+          RELEASE_PREFIX="${{ env.RELEASE_PREFIX }}"
+          APP_ENV="${{ env.APP_ENV }}"
+
+          cat > commands.json <<'JSON'
+          {
+            "commands": [
+              "#!/bin/bash",
+              "set -euo pipefail",
+              "echo \"▶️ Starting n8n stack for environment: __APP_ENV__\"",
+              "mkdir -p /opt/n8n/releases",
+              "aws s3 cp s3://__BUCKET__/__RELEASE_PREFIX__/__TAR__ /opt/n8n/releases/",
+              "cd /opt/n8n/releases",
+              "rm -rf n8n-__SHA__ && mkdir n8n-__SHA__",
+              "tar -xzf __TAR__ -C n8n-__SHA__",
+              "ln -sfn /opt/n8n/releases/n8n-__SHA__ /opt/n8n/current",
+              "chmod +x /opt/n8n/current/start.sh",
+              "cd /opt/n8n/current",
+              "./start.sh __APP_ENV__"
+            ]
+          }
+          JSON
+
+          # Interpolate placeholders BEFORE sending to SSM (so no unbound vars on host)
+          sed -i "s/__SHA__/${SHA}/g" commands.json
+          sed -i "s#__BUCKET__#${BUCKET}#g" commands.json
+          sed -i "s#__RELEASE_PREFIX__#${RELEASE_PREFIX}#g" commands.json
+          sed -i "s/__TAR__/${TAR}/g" commands.json
+          sed -i "s/__APP_ENV__/${APP_ENV}/g" commands.json
+
+          echo "── commands.json to be sent to SSM ──"
+          cat commands.json
+
+          CMD_ID="$(aws ssm send-command \
+            --document-name 'AWS-RunShellScript' \
+            --instance-ids "$INSTANCE" \
+            --parameters file://commands.json \
+            --timeout-seconds 1200 \
+            --cloud-watch-output-config CloudWatchOutputEnabled=true,CloudWatchLogGroupName=/aws/ssm/n8n-deploy \
+            --query 'Command.CommandId' --output text)"
+
+          echo "command_id=$CMD_ID" >> "$GITHUB_OUTPUT"
+          echo "SSM CommandId: $CMD_ID"
+
+          # Poll until terminal state; fail on anything but Success
+          deadline=$((SECONDS + 1200))
+          while true; do
+            STATUS="$(aws ssm get-command-invocation \
+              --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+              --query 'Status' --output text || echo "Pending")"
+            echo "Current SSM status: $STATUS"
+            case "$STATUS" in
+              Success) break ;;
+              Failed|Cancelled|TimedOut) echo "::error::SSM status: $STATUS"; exit 1 ;;
+            esac
+            (( SECONDS > deadline )) && { echo "::error::SSM polling exceeded 20 minutes"; exit 1; }
+            sleep 6
+          done
+
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" --instance-id "$INSTANCE" \
+            --query '{Status:Status,ResponseCode:ResponseCode,StdOut:StandardOutputContent,StdErr:StandardErrorContent}' \
+            --output text
+          
+      - name: CloudWatch logs (links + tail)
+        if: always()
+        env:
+          GROUP: /aws/ssm/n8n-deploy
+          REGION: ${{ env.AWS_REGION }}
+          CMD_ID: ${{ steps.ssm.outputs.command_id }}
+          INSTANCE: ${{ steps.ec2.outputs.instance_id }}
+        run: |
+          set -euo pipefail
+
+          # SSM names streams deterministically:
+          # <command-id>/<instance-id>/aws-runShellScript/{stdout|stderr}
+          STREAM_STD="$CMD_ID/$INSTANCE/aws-runShellScript/stdout"
+          STREAM_ERR="$CMD_ID/$INSTANCE/aws-runShellScript/stderr"
+
+          # Double-encode for the CloudWatch console URL
+          py='import sys, urllib.parse as u; s=sys.stdin.read().strip(); print(u.quote(u.quote(s, safe=""), safe=""))'
+          GROUP_ENC="$(printf '%s' "$GROUP" | python3 -c "$py")"
+          STD_ENC="$(printf '%s' "$STREAM_STD" | python3 -c "$py")"
+          ERR_ENC="$(printf '%s' "$STREAM_ERR" | python3 -c "$py")"
+
+          URL_STD="https://console.aws.amazon.com/cloudwatch/home?region=${REGION}#logsV2:log-groups/log-group/${GROUP_ENC}/log-events/${STD_ENC}"
+          URL_ERR="https://console.aws.amazon.com/cloudwatch/home?region=${REGION}#logsV2:log-groups/log-group/${GROUP_ENC}/log-events/${ERR_ENC}"
+
+          echo "STDOUT: $URL_STD"
+          echo "STDERR: $URL_ERR"
+          {
+            echo "### CloudWatch logs"
+            echo ""
+            echo "[Open STDOUT]($URL_STD)  |  [Open STDERR]($URL_ERR)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "---- STDERR (last 200 lines) ----"
+          aws logs get-log-events \
+            --log-group-name "$GROUP" --log-stream-name "$STREAM_ERR" \
+            --limit 200 --query 'events[].message' --output text || true
+
+          echo "---- STDOUT (last 200 lines) ----"
+          aws logs get-log-events \
+            --log-group-name "$GROUP" --log-stream-name "$STREAM_STD" \
+            --limit 200 --query 'events[].message' --output text || true
+
+
+      # Basic post-deploy health check via public URL (/version from nginx)
+      - name: Health check
+        if: ${{ success() }}
+        run: |
+          set -euo pipefail
+          for i in {1..15}; do
+            code="$(curl -ksS --max-time 3 -o /dev/null -w '%{http_code}' "$APP_URL/version" || true)"
+            echo "Attempt $i: HTTP $code"
+            [[ "$code" == "200" ]] && exit 0
+            sleep 4
+          done
+          echo "::error::Health check failed for $APP_URL/version"
+          exit 1
+
+      # Always dump latest SSM invocation (handy if earlier steps failed)
+      - name: Dump latest SSM invocation (by id)
+        if: always() && steps.ssm.outputs.command_id && steps.ec2.outputs.instance_id
+        run: |
+          set -euo pipefail
+          aws ssm list-command-invocations \
+            --command-id "${{ steps.ssm.outputs.command_id }}" \
+            --instance-id "${{ steps.ec2.outputs.instance_id }}" \
+            --details \
+            --output json | jq -r '.CommandInvocations[0] // {}'

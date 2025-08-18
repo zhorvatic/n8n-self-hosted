@@ -2,12 +2,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **N8N Platform on AWS**
-[![N8N](https://img.shields.io/badge/N8N-Workflow%20Automation-4A90E2)](https://n8n.io/) [![Docker](https://img.shields.io/badge/Docker-N8N%20%7C%20PostgreSQL%20%7C%20Nginx-2496ED)](https://www.docker.com/) [![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20ALB%20%7C%20S3%20%7C%20EBS%20%7C%20SSM%20%7C%20ACM%20%7C%20IAM%20%7C%20CW%20-FF9900)](https://aws.amazon.com/) [![GitHub%20Actions](https://img.shields.io/badge/GitHub%20Actions-Build%20%7C%20Deploy%20%7C%20Test%20-22C55E)](https://github.com/features/actions)
+
+[![N8N](https://img.shields.io/badge/N8N-Workflow%20Automation-4A90E2)](https://n8n.io/) [![Docker](https://img.shields.io/badge/Docker-N8N%20%7C%20PostgreSQL%20%7C%20Nginx-2496ED)](https://www.docker.com/) [![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20ALB%20%7C%20S3%20%7C%20EBS%20%7C%20SSM%20%7C%20ACM%20%7C%20IAM%20%7C%20CW%20-FF9900)](https://aws.amazon.com/) [![GitHub%20Actions](https://img.shields.io/badge/GitHub%20Actions-Build%20%7C%20Deploy%20%7C%20Test%20-22C55E)](https://github.com/features/actions)<br>
 [![Cost](https://img.shields.io/badge/Monthly%20Cost-~$48--50-10B981)](https://github.com/zhorvatic/n8n-self-hosted) 
 
 **Local PC LLM Integration**
-[![LLM](https://img.shields.io/badge/LLM-Ollama%20%7C%20gpt--oss:20b%20%7C%20RTX5080%20-4A90E2)](https://ollama.ai/) [![Cloudflare](https://img.shields.io/badge/Cloudflare-%20Zero%20Trust%20Tunnel%20%7C%20DNS%7C%20SSL/TLS-F38020)](https://www.cloudflare.com/) 
-[![Cost](https://img.shields.io/badge/Monthly%20AI%20Cost-~$Free-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost](https://img.shields.io/badge/Savings%20vs%20API-~90%-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost](https://img.shields.io/badge/Savings%20vs%20Subscriptions-~99%-10B981)](https://github.com/zhorvatic/n8n-self-hosted)
+
+[![LLM](https://img.shields.io/badge/LLM-Ollama%20%7C%20gpt--oss:20b%20%7C%20RTX5080%20-4A90E2)](https://ollama.ai/) [![Cloudflare](https://img.shields.io/badge/Cloudflare-%20Zero%20Trust%20Tunnel%20%7C%20DNS%7C%20SSL/TLS-F38020)](https://www.cloudflare.com/) <br>
+[![Cost](https://img.shields.io/badge/Monthly%20AI%20Cost-~$Free-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost2](https://img.shields.io/badge/Savings%20vs%20API-~90%25-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost3](https://img.shields.io/badge/Savings%20vs%20Subscriptions-~99%25-10B981)](https://github.com/zhorvatic/n8n-self-hosted)
 
 A **production-ready N8N workflow automation platform** that combines enterprise-grade infrastructure with innovative cost optimization through personal AI integration.
 
@@ -15,7 +17,7 @@ A **production-ready N8N workflow automation platform** that combines enterprise
 
 - [Architecture Overview](#architecture-overview)
 - [Infrastructure Details](#infrastructure-details)
-  - [AWS Resources (ca-central-1)](#aws-resources-ca-central-1)
+  - [AWS Resources](#aws-resources)
   - [Cloudflare Configuration](#cloudflare-configuration)
 - [Services](#services)
   - [N8N Configuration](#n8n-configuration)
@@ -30,7 +32,6 @@ A **production-ready N8N workflow automation platform** that combines enterprise
   - [Docker Health Checks](#docker-health-checks)
 - [Ollama Integration](#ollama-integration)
   - [Connection Details](#connection-details)
-  - [Usage in N8N](#usage-in-n8n)
 - [Development Workflow](#development-workflow)
 - [Maintenance](#maintenance)
   - [Backup Strategy](#backup-strategy)

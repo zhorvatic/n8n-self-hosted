@@ -1,6 +1,15 @@
-# N8N Self-Hosted Deployment
+# N8N Self-Hosted
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A production-ready N8N workflow automation platform deployed on AWS EC2 with PostgreSQL, secured by Cloudflare Access, and integrated with a personal Ollama LLM instance.
+**N8N Platform on AWS**
+[![N8N](https://img.shields.io/badge/N8N-Workflow%20Automation-4A90E2)](https://n8n.io/) [![Docker](https://img.shields.io/badge/Docker-N8N%20%7C%20PostgreSQL%20%7C%20Nginx-2496ED)](https://www.docker.com/) [![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20ALB%20%7C%20S3%20%7C%20EBS%20%7C%20SSM%20%7C%20ACM%20%7C%20IAM%20%7C%20CW%20-FF9900)](https://aws.amazon.com/) [![GitHub%20Actions](https://img.shields.io/badge/GitHub%20Actions-Build%20%7C%20Deploy%20%7C%20Test%20-22C55E)](https://github.com/features/actions)
+[![Cost](https://img.shields.io/badge/Monthly%20Cost-~$48--50-10B981)](https://github.com/zhorvatic/n8n-self-hosted) 
+
+**Local PC LLM Integration**
+[![LLM](https://img.shields.io/badge/LLM-Ollama%20%7C%20gpt--oss:20b%20%7C%20RTX5080%20-4A90E2)](https://ollama.ai/) [![Cloudflare](https://img.shields.io/badge/Cloudflare-%20Zero%20Trust%20Tunnel%20%7C%20DNS%7C%20SSL/TLS-F38020)](https://www.cloudflare.com/) 
+[![Cost](https://img.shields.io/badge/Monthly%20AI%20Cost-~$Free-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost](https://img.shields.io/badge/Savings%20vs%20API-~90%-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost](https://img.shields.io/badge/Savings%20vs%20Subscriptions-~99%-10B981)](https://github.com/zhorvatic/n8n-self-hosted)
+
+A **production-ready N8N workflow automation platform** that combines enterprise-grade infrastructure with innovative cost optimization through personal AI integration.
 
 ## Table of Contents
 
@@ -33,7 +42,6 @@ A production-ready N8N workflow automation platform deployed on AWS EC2 with Pos
 - [Troubleshooting](#troubleshooting)
   - [Common Issues](#common-issues)
   - [Log Locations](#log-locations)
-- [Future Enhancements](#future-enhancements)
 
 ## Architecture Overview
 
@@ -58,48 +66,43 @@ A production-ready N8N workflow automation platform deployed on AWS EC2 with Pos
 
 ## Infrastructure Details
 
-### AWS Resources (ca-central-1)
+### AWS Resources
 
 **EC2 Instance**
-- Name: `n8n-server`
-- Type: `t3.small`
-- OS: Ubuntu 24.04.23
-- Key: `n8n-ec2`
-- Security Group: `n8n-sg`
+- **Name:** `n8n-server`
+- **Type:** `t3.small`
+- **OS**: Ubuntu 24.04.23
+- **Key**: `n8n-ec2`
+- **Security Group**: `n8n-sg`
 
 **Storage**
 - `n8n-server-ssd`: 20GiB (application data)
 - `n8n-runtime-data`: 2GiB (runtime files)
-- `pg_data`: PostgreSQL data volume
 
 **Load Balancer**
-- ALB: `n8n-alb`
-- Target Group: `n8n-version-tg`
-- Security Group: `alb-sg`
+- **ALB:** `n8n-alb`
+- **Target Group**: `n8n-version-tg`
+- **Security Group**: `alb-sg`
 
 **Backup**
-- Plan: `n8n-backups`
-- Rule: `n8n-daily-backups`
-- Resources: `n8n-ebs-resources` (EBS snapshots)
+- **Plan**: `n8n-backups`
+- **Rule**: `n8n-daily-backups`
+- **Resources**: `n8n-ebs-resources` (EBS snapshots)
 
 **IAM Roles**
 - `n8n-github-deploy`: GitHub Actions deployment
 - `n8n-ssm-access`: EC2 Parameter Store access
 
 **Other Resources**
-- S3 Bucket: `n8n-deploy-artifacts-ca-central-1`
-- CloudWatch Log Group: `/aws/ssm/n8n-deploy`
-- SSL Certificate: `n8n.zvonkos.com`
+- **S3 Bucket**: `n8n-deploy-artifacts-ca-central-1`
+- **CloudWatch Log Group**: `/aws/ssm/n8n-deploy`
+- **SSL Certificate**: `n8n.zvonkos.com`
 
 ### Cloudflare Configuration
 
 **DNS Records**
 - `n8n.zvonkos.com` → AWS ALB
-- `llm.zvonkos.com` → Personal PC tunnel
-
-**Access Control**
-- EC2 egress bypass (no auth headers required from server)
-- Standard Cloudflare Access for other clients
+- `llm.zvonkos.com` → Cloudflared PC Tunnel
 
 ## Services
 
@@ -108,7 +111,6 @@ A production-ready N8N workflow automation platform deployed on AWS EC2 with Pos
 - **Port**: 5678 (internal)
 - **Protocol**: HTTPS
 - **Database**: PostgreSQL
-- **Features**: Runners enabled, diagnostics disabled
 
 ### PostgreSQL
 - **Image**: `postgres:15`
@@ -175,9 +177,6 @@ All services include health checks with automatic restart policies:
 - **Context**: 8k tokens
 - **Hardware**: RTX 5080
 - **Access**: Cloudflare tunnel with EC2 bypass
-
-### Usage in N8N
-N8N workflows can directly call the Ollama API without authentication headers when running from the EC2 instance.
 
 ## Development Workflow
 
@@ -248,13 +247,6 @@ curl https://n8n.zvonkos.com/version
 - **Application**: Docker container logs
 - **System**: Standard Ubuntu logs (`/var/log/`)
 
-## Future Enhancements
-
-- [ ] Monitoring and alerting setup
-- [ ] Auto-scaling configuration
-- [ ] Additional backup strategies
-- [ ] Performance optimization
-- [ ] Multi-environment support
 
 ## License and Third-Party Components
 

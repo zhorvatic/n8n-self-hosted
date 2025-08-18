@@ -22,17 +22,6 @@ This guide explains the "why" behind each architectural decision in our N8N depl
   - [Why Not Kubernetes?](#why-not-kubernetes)
   - [Why Not RDS?](#why-not-rds)
   - [Why Not Serverless?](#why-not-serverless)
-- [Interview Talking Points](#interview-talking-points)
-  - [Technical Decisions](#technical-decisions)
-  - [Problem-Solving Examples](#problem-solving-examples)
-  - [Scalability Considerations](#scalability-considerations)
-- [What This Demonstrates](#what-this-demonstrates)
-  - [DevOps Skills](#devops-skills)
-  - [Cloud Architecture](#cloud-architecture)
-  - [Problem-Solving Approach](#problem-solving-approach)
-- [Future Improvements](#future-improvements)
-  - [Short Term](#short-term)
-  - [Long Term](#long-term)
 
 ## The Big Picture: What Are We Building?
 
@@ -43,17 +32,15 @@ We're building a **workflow automation platform** that can:
 - Scale reliably without manual intervention
 - Stay secure and accessible from anywhere
 
-Think of it like Zapier, but self-hosted and integrated with our own AI model.
-
 ## Why This Architecture? The Core Problems We're Solving
 
-### Problem 1: "I want to run workflows 24/7 without my laptop being on"
+### Problem 1: "I want to run workflows 24/7 without my computer being on"
 **Solution**: Cloud hosting on AWS EC2
 - EC2 gives us a computer that runs 24/7 in the cloud
 - We pay only for what we use
 - AWS handles the physical infrastructure
 
-### Problem 2: "I want my workflows to use AI, but ChatGPT API is expensive"
+### Problem 2: "I want my workflows to use AI, but Cloud APIs are expensive"
 **Solution**: Personal Ollama instance + Cloudflare tunnel
 - Run our own AI model on a powerful gaming PC (RTX 5080)
 - Cloudflare tunnel securely connects our home PC to the cloud
@@ -69,7 +56,7 @@ Think of it like Zapier, but self-hosted and integrated with our own AI model.
 ## Component Breakdown: What Each Piece Does
 
 ### 1. Personal PC with Ollama
-**What it is**: Your gaming computer running an AI model
+**What it is**: Your computer running an AI model
 **Why we need it**: 
 - Free AI inference (no API costs)
 - Full control over model and data
@@ -202,52 +189,3 @@ Think of it like Zapier, but self-hosted and integrated with our own AI model.
 - **State**: N8N needs persistent connections and state
 - **Cost**: Would be more expensive for 24/7 workloads
 - **Complexity**: Cold starts would hurt user experience
-
-## Other Talking Points
-
-### Technical Decisions
-- "I chose this architecture to balance cost, reliability, and simplicity"
-- "Each component has a specific purpose and can be upgraded independently"
-- "Security is implemented in layers, not just one place"
-
-### Problem-Solving Examples
-- "When I needed AI integration, I evaluated cloud APIs vs self-hosting and chose self-hosting for cost and control"
-- "I implemented health checks at multiple levels to catch different types of failures"
-- "I used infrastructure as code principles with Docker Compose and GitHub Actions"
-
-### Scalability Considerations
-- "The current setup handles our needs, but I designed it to scale horizontally"
-- "Database and application are separated, so they can scale independently"
-- "The artifact-based deployment makes it easy to deploy to multiple environments"
-
-## What This Demonstrates
-
-### DevOps Skills
-- Infrastructure as Code (Docker Compose, GitHub Actions)
-- CI/CD pipeline with automated testing
-- Monitoring and logging strategy
-- Security best practices
-
-### Cloud Architecture
-- Multi-service application design
-- Load balancing and reverse proxy patterns
-- Secret management with AWS Parameter Store
-- Backup and disaster recovery planning
-
-### Problem-Solving Approach
-- Evaluated multiple solutions (cloud AI vs self-hosted)
-- Made cost-conscious decisions
-- Implemented monitoring from day one
-- Designed for maintainability
-
-## Future Improvements
-
-### Short Term
-- Add monitoring and alerting (CloudWatch alarms)
-- Implement log aggregation (ELK stack or CloudWatch Insights)
-- Add automated testing for workflows
-
-### Long Term
-- Multi-region deployment for disaster recovery
-- Auto-scaling based on usage patterns
-- Migration to container orchestration if complexity grows

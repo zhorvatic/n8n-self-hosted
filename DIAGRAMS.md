@@ -422,18 +422,18 @@ flowchart TD
 graph TB
     subgraph "Monthly Costs (USD)"
         subgraph "Compute"
-            EC2[EC2 t3.small<br/>~$15/month]
+            EC2[EC2 t3.small<br/>~$16/month]
             ALB[Application LB<br/>~$16/month]
         end
         
         subgraph "Storage"
             EBS[EBS Volumes<br/>22GB × $0.10<br/>~$2.20/month]
-            Snap[EBS Snapshots<br/>~$1-3/month]
-            S3[S3 Storage<br/>~$0.50/month]
+            Snap[EBS Snapshots<br/>~$2-4/month]
+            S3[S3 Storage<br/>~$1/month]
         end
         
         subgraph "Network"
-            Data[Data Transfer<br/>~$1-5/month]
+            Data[Data Transfer<br/>~$3-6/month]
         end
         
         subgraph "Services"

@@ -223,7 +223,10 @@ jobs:
         run: |
           set -euo pipefail
           for i in {1..15}; do
-            code="$(curl -ksS --max-time 3 -o /dev/null -w '%{http_code}' "$APP_URL/version" || true)"
+            code="$(curl -ksS --max-time 5 \
+              -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+              -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+              -o /dev/null -w '%{http_code}' "${APP_URL}/version" || true)"
             echo "Attempt $i: HTTP $code"
             [[ "$code" == "200" ]] && exit 0
             sleep 4

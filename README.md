@@ -255,3 +255,33 @@ curl https://n8n.zvonkos.com/version
 - [ ] Additional backup strategies
 - [ ] Performance optimization
 - [ ] Multi-environment support
+
+## License and Third-Party Components
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Components
+
+This project uses the following third-party software and services:
+
+- **N8N**: Licensed under the [Sustainable Use License](https://github.com/n8n-io/n8n/blob/master/LICENSE.md) - Free for personal use
+- **PostgreSQL**: Licensed under the [PostgreSQL License](https://www.postgresql.org/about/licence/)
+- **Nginx**: Licensed under the [BSD 2-Clause License](http://nginx.org/LICENSE)
+- **Docker**: Licensed under the [Apache 2.0 License](https://github.com/docker/docker/blob/master/LICENSE)
+- **Ollama**: Licensed under the [MIT License](https://github.com/ollama/ollama/blob/main/LICENSE)
+
+### Cloud Services
+
+This project integrates with commercial cloud services:
+- **AWS**: Commercial cloud services (pay-per-use)
+- **Cloudflare**: Commercial CDN and security services
+- **GitHub**: Version control and CI/CD platform
+
+### Usage Notice
+
+This repository contains configuration and deployment scripts. Users are responsible for:
+- Complying with all third-party software licenses
+- Understanding costs associated with cloud services
+- Ensuring appropriate licensing for their use case (especially N8N's Sustainable Use License)
+
+For commercial use beyond N8N's Sustainable Use License limits, consider N8N's commercial licensing options.

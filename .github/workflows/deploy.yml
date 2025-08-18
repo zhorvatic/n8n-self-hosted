@@ -18,6 +18,8 @@ env:
   AWS_REGION: ca-central-1
   APP_ENV: prod
   APP_URL: https://n8n.zvonkos.com
+  CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+  CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
   BUCKET: n8n-deploy-artifacts-ca-central-1
   RELEASE_PREFIX: releases
   # Optional: KMS key for S3 SSE-KMS (uncomment when you have one)

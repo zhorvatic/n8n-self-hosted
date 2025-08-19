@@ -1,4 +1,6 @@
 # N8N Self-Hosted
+An AI-powered workflow automation platform solution built on secure AWS infrastructure, optimized for cost-efficient LLM inference.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **N8N Platform on AWS**
@@ -11,8 +13,6 @@
 [![LLM](https://img.shields.io/badge/LLM-Ollama%20%7C%20gpt--oss:20b%20%7C%20RTX5080%20-4A90E2)](https://ollama.ai/) [![Cloudflare](https://img.shields.io/badge/Cloudflare-%20Zero%20Trust%20Tunnel%20%7C%20DNS%7C%20SSL/TLS-F38020)](https://www.cloudflare.com/) <br>
 [![Cost](https://img.shields.io/badge/Monthly%20AI%20Cost-~$Free-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost2](https://img.shields.io/badge/Savings%20vs%20API-~90%25-10B981)](https://github.com/zhorvatic/n8n-self-hosted) [![Cost3](https://img.shields.io/badge/Savings%20vs%20Subscriptions-~99%25-10B981)](https://github.com/zhorvatic/n8n-self-hosted)
 
-A **production-ready N8N workflow automation platform** that combines enterprise-grade infrastructure with innovative cost optimization through personal AI integration.
-
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
@@ -24,7 +24,7 @@ A **production-ready N8N workflow automation platform** that combines enterprise
   - [PostgreSQL](#postgresql)
   - [Nginx](#nginx)
 - [Deployment](#deployment)
-  - [Automated Deployment (GitHub Actions)](#automated-deployment-github-actions)
+  - [Automated Deployment](#automated-deployment)
   - [Manual Deployment](#manual-deployment)
   - [Environment Variables](#environment-variables)
 - [Health Monitoring](#health-monitoring)
@@ -72,13 +72,12 @@ A **production-ready N8N workflow automation platform** that combines enterprise
 **EC2 Instance**
 - **Name:** `n8n-server`
 - **Type:** `t3.small`
-- **OS**: Ubuntu 24.04.23
-- **Key**: `n8n-ec2`
+- **OS**: `Ubuntu 24.04.23`
 - **Security Group**: `n8n-sg`
 
 **Storage**
-- `n8n-server-ssd`: 20GiB (application data)
-- `n8n-runtime-data`: 2GiB (runtime files)
+- `n8n-server-ssd`: 20GiB 
+- `n8n-runtime-data`: 2GiB 
 
 **Load Balancer**
 - **ALB:** `n8n-alb`
@@ -88,16 +87,20 @@ A **production-ready N8N workflow automation platform** that combines enterprise
 **Backup**
 - **Plan**: `n8n-backups`
 - **Rule**: `n8n-daily-backups`
-- **Resources**: `n8n-ebs-resources` (EBS snapshots)
+- **Resources**: `n8n-ebs-resources` 
 
 **IAM Roles**
 - `n8n-github-deploy`: GitHub Actions deployment
 - `n8n-ssm-access`: EC2 Parameter Store access
 
-**Other Resources**
-- **S3 Bucket**: `n8n-deploy-artifacts-ca-central-1`
-- **CloudWatch Log Group**: `/aws/ssm/n8n-deploy`
-- **SSL Certificate**: `n8n.zvonkos.com`
+**S3** 
+- **Bucket**: `n8n-deploy-artifacts-ca-central-1`
+
+**CloudWatch** 
+- **Log Group**: `/aws/ssm/n8n-deploy`
+
+**Certificate Manager**
+- **Domain**: `n8n.zvonkos.com`
 
 ### Cloudflare Configuration
 
@@ -115,7 +118,6 @@ A **production-ready N8N workflow automation platform** that combines enterprise
 
 ### PostgreSQL
 - **Image**: `postgres:15`
-- **Database**: Configured via environment variables
 - **Storage**: Persistent volume (`pg_data`)
 
 ### Nginx
@@ -128,11 +130,11 @@ A **production-ready N8N workflow automation platform** that combines enterprise
 
 ## Deployment
 
-### Automated Deployment (GitHub Actions)
+### Automated Deployment
 
 Deployments trigger automatically on pushes to `main` branch:
 
-1. **Build**: Creates versioned artifact with commit info
+1. **Build**: Creates a versioned artifact with commit info
 2. **Upload**: Stores artifact in S3 bucket
 3. **Deploy**: Uses AWS SSM to deploy on EC2
 4. **Verify**: Health check via `/version` endpoint
@@ -147,7 +149,7 @@ cd /opt/n8n/current
 
 ### Environment Variables
 
-Secrets are managed in AWS Parameter Store under `/n8n/prod/`:
+Secrets are managed in AWS Parameter Store
 - `POSTGRES_DB`
 - `POSTGRES_USER` 
 - `POSTGRES_PASSWORD`
@@ -165,10 +167,10 @@ Secrets are managed in AWS Parameter Store under `/n8n/prod/`:
 
 ### Docker Health Checks
 
-All services include health checks with automatic restart policies:
-- N8N: HTTP check via internal endpoint
-- PostgreSQL: `pg_isready` check
-- Nginx: Internal curl check
+All services include health checks:
+- **N8N**: HTTP check via internal endpoint
+- **PostgreSQL**: `pg_isready` check
+- **Nginx**: Internal curl check
 
 ## Ollama Integration
 

@@ -39,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment:
-      name: ${{ env.APP_ENV }}
-      url: ${{ env.APP_URL }}
+      name: prod
+      url: https://n8n.zvonkos.com
 
     steps:
       - name: Checkout repo

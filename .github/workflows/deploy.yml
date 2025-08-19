@@ -1,8 +1,14 @@
-name: Deploy to EC2 (Artifact)
+name: Build and Deploy Artifact to EC2
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+    paths:
+      - .github/workflows/deploy.yml
+      - nginx.conf
+      - start.sh
+      - docker-compose.yml
 
 # Principle of least privilege for GHA; AWS perms come from the assumed role
 permissions:
@@ -22,9 +28,6 @@ env:
   CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
   BUCKET: n8n-deploy-artifacts-ca-central-1
   RELEASE_PREFIX: releases
-  # Optional: KMS key for S3 SSE-KMS (uncomment when you have one)
-  # KMS_KEY_ID: arn:aws:kms:ca-central-1:818682288072:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  # Deployment record recreated after cleanup
 
 defaults:
   run:
@@ -36,16 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment:
-      name: prod
-      url: https://n8n.zvonkos.com
+      name: ${{ env.APP_ENV }}
+      url: ${{ env.APP_URL }}
 
     steps:
-      # SECURITY: Pin actions to a full commit SHA in your repo after first run.
-      # See notes below.
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
-          # helps when deriving version metadata or changelogs later
+          # Grabs all commits and branches from the repository (1 grabs the latest commit) 
           fetch-depth: 0
 
       - name: Compute version info
@@ -80,8 +81,7 @@ jobs:
           ls -lh "$TAR"
 
       - name: Configure AWS credentials via OIDC
-        # Recommend upgrading to latest major (v4) and pinning to commit SHA.
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
         with:
           role-to-assume: arn:aws:iam::818682288072:role/n8n-github-deploy
           aws-region: ${{ env.AWS_REGION }}

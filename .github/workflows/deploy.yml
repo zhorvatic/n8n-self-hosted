@@ -9,6 +9,7 @@ on:
       - nginx.conf
       - start.sh
       - docker-compose.yml
+      - searxng/**
 
 # Principle of least privilege for GHA; AWS perms come from the assumed role
 permissions:
@@ -74,8 +75,8 @@ jobs:
         run: |
           set -euo pipefail  
           mkdir -p release
-          # include nginx.conf so /version can be served without waking n8n
           cp docker-compose.yml start.sh VERSION nginx.conf release/
+          cp -r searxng release/
           TAR="n8n-${{ steps.meta.outputs.short_sha }}.tar.gz"
           tar -C release -czf "$TAR" .
           ls -lh "$TAR"

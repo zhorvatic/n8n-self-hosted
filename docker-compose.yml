@@ -27,7 +27,6 @@ services:
     networks:
       - backend
     healthcheck:
-      # hit n8n through nginx so TLS/headers/proxy chain is exercised locally
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5678/healthz', r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 5s
       timeout: 2s
@@ -56,12 +55,14 @@ services:
     image: nginx:alpine
     restart: always
     ports:
-      - "80:80"   # Internal HTTP for ALB
+      - "80:80"   
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./static:/usr/share/nginx/html:ro
     depends_on:
       n8n:
+        condition: service_healthy
+      searxng:
         condition: service_healthy
     networks:
       - backend
@@ -78,20 +79,22 @@ services:
     restart: unless-stopped
     volumes:
       - ./searxng:/etc/searxng:ro
+      - searxng_cache:/var/cache/searxng
     networks:
       - backend
     expose:
       - "8080"  
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
-      interval: 10s
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/search?q=ping&format=json"]
+      interval: 20s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
 volumes:
   n8n_data:
   pg_data:
+  searxng_cache:
 
 networks:
   backend:

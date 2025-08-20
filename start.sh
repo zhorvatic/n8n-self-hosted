@@ -100,8 +100,9 @@ docker compose --project-name n8n --env-file "$ENV_FILE" up -d --wait --no-build
 echo "🩺 Verifying via Nginx (max 60s)"
 for i in {1..30}; do
   if curl -fsS --max-time 2 http://localhost/nginx-healthz >/dev/null &&
+     curl -fsS --max-time 2 http://localhost/search-healthz >/dev/null &&
      curl -fsS --max-time 2 http://localhost/upstream-health >/dev/null; then
-    echo "✅ Nginx and upstream n8n are healthy"
+    echo "✅ Nginx, SearXNG and upstream n8n are healthy"
     exit 0
   fi
   (( i % 10 == 0 )) && docker compose --project-name n8n --env-file "$ENV_FILE" ps

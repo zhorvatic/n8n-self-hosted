@@ -77,7 +77,7 @@ services:
     container_name: searxng
     restart: unless-stopped
     volumes:
-      - searxng:/etc/searxng:ro
+      - ./searxng:/etc/searxng:ro
     networks:
       - backend
     expose:

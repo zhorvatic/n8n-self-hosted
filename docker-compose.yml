@@ -28,10 +28,10 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5678/healthz', r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
-      interval: 5s
+      interval: 15s
       timeout: 2s
-      retries: 10
-      start_period: 15s
+      retries: 3
+      start_period: 30s
 
   postgres:
     image: postgres:15
@@ -45,11 +45,11 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U n8n -d n8n -h 127.0.0.1"]
-      interval: 5s
+      test: ["CMD", "pg_isready", "-U", "n8n", "-d", "n8n", "-h", "127.0.0.1"]
+      interval: 10s
       timeout: 3s
-      retries: 10
-      start_period: 10s
+      retries: 5
+      start_period: 20s
 
   nginx:
     image: nginx:alpine
@@ -67,11 +67,11 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/nginx-healthz >/dev/null"]
-      interval: 5s
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/nginx-healthz"]
+      interval: 30s
       timeout: 2s
-      retries: 10
-      start_period: 10s
+      retries: 3
+      start_period: 15s
 
   searxng:
     image: searxng/searxng:latest
@@ -85,11 +85,11 @@ services:
     expose:
       - "8080"  
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/search?q=ping&format=json"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD","wget","-qO-", http://127.0.0.1:8080/search?q=ping&format=json"]
+      interval: 60s
+      timeout: 3s
+      retries: 3
+      start_period: 45s
 
 volumes:
   n8n_data:

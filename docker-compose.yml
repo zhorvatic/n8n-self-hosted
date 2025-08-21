@@ -85,7 +85,7 @@ services:
     expose:
       - "8080"  
     healthcheck:
-      test: ["CMD","wget","-qO-", http://127.0.0.1:8080/search?q=ping&format=json"]
+      test: ["CMD","wget","-qO-", "http://127.0.0.1:8080/"]
       interval: 60s
       timeout: 3s
       retries: 3

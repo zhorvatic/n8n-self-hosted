@@ -75,7 +75,6 @@ services:
 
   searxng:
     image: searxng/searxng:latest
-    container_name: searxng
     restart: unless-stopped
     volumes:
       - ./searxng:/etc/searxng:ro
